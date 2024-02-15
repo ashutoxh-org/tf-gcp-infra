@@ -8,22 +8,26 @@ variable "project-name" {
   type = string
 }
 
-variable "webapp-subnet-cidr-range" {
+variable "vpc_count" {
+  type = number
+}
+
+variable "webapp_subnet_cidr_ranges" {
+  type = list(string)
+}
+
+variable "db_subnet_cidr_ranges" {
+  type = list(string)
+}
+
+variable "deployment_region" {
   type = string
 }
 
-variable "db-subnet-cidr-range" {
-  type = string
+variable "egress_cidr_blocks" {
+  type = list(string)
 }
 
-variable "region" {
-  type = string
-}
-
-variable "webapp-egress" {
-  type = string
-}
-
-variable "internet-gateway" {
+variable "default_internet_gateway" {
   type = string
 }

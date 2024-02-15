@@ -3,8 +3,8 @@ CSYE 6225:  Network Structure & Cloud Computing (Spring 2024) - Prof. Tejas Pari
 
 
 ### Active GCP services
-| Service  | Status | When         |
-|:---------|:-------|:-------------|
-| Compute Engine API | Active | Assignment 3 |
+| Sr no | Service                | Status | When              |
+|:------|:-----------------------|:-------|:------------------|
+| 1.    | Compute Engine API     | Active | Assignment 3      |
 
 ### Assignment 3

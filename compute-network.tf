@@ -14,7 +14,7 @@ resource "google_compute_subnetwork" "webapp" {
 }
 
 resource "google_compute_subnetwork" "db" {
-  count         = var.vpc_count
+  count         = var.vpc_coun
   name          = "db-${count.index}-${random_string.resource_name.result}"
   ip_cidr_range = var.db_subnet_cidr_ranges[count.index]
   network       = google_compute_network.vpc[count.index].name

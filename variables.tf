@@ -12,6 +12,14 @@ variable "routing_mode" {
   type = string
 }
 
+variable "auto_create_subnetworks" {
+  type = bool
+}
+
+variable "delete_default_routes_on_create" {
+  type = bool
+}
+
 variable "webapp_subnet_cidr_range" {
   type = string
 }
@@ -24,7 +32,7 @@ variable "deployment_region" {
   type = string
 }
 
-variable "egress_cidr_block" {
+variable "internet_access_route" {
   type = string
 }
 
@@ -41,10 +49,6 @@ variable "http_port" {
 }
 
 variable "https_port" {
-  type = list(string)
-}
-
-variable "ssh_port" {
   type = list(string)
 }
 
@@ -82,5 +86,25 @@ variable "disk_size" {
 }
 
 variable "disk_type" {
+  type = string
+}
+
+variable "webapp_firewall_http_tag" {
+  type = string
+}
+
+variable "webapp_firewall_https_tag" {
+  type = string
+}
+
+variable "webapp_firewall_app_tag" {
+  type = string
+}
+
+variable "db_firewall_http_tag" {
+  type = string
+}
+
+variable "db_firewall_https_tag" {
   type = string
 }

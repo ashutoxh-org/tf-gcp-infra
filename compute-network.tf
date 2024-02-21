@@ -39,7 +39,7 @@ resource "google_compute_firewall" "allow_http_traffic_webapp" {
   source_ranges = var.source_ranges
   # Only affect traffic to or from instances that have one or more of the specified tags
   target_tags = ["webapp"]
-  depends_on = [google_compute_network.vpc]
+  depends_on  = [google_compute_network.vpc]
 }
 
 resource "google_compute_firewall" "allow_https_traffic_webapp" {
@@ -52,7 +52,7 @@ resource "google_compute_firewall" "allow_https_traffic_webapp" {
   source_ranges = var.source_ranges
   # Only affect traffic to or from instances that have one or more of the specified tags
   target_tags = ["webapp"]
-  depends_on = [google_compute_network.vpc]
+  depends_on  = [google_compute_network.vpc]
 }
 
 resource "google_compute_firewall" "allow_app_traffic_webapp" {
@@ -65,7 +65,7 @@ resource "google_compute_firewall" "allow_app_traffic_webapp" {
   source_ranges = var.source_ranges
   # Only affect traffic to or from instances that have one or more of the specified tags
   target_tags = ["webapp"]
-  depends_on = [google_compute_network.vpc]
+  depends_on  = [google_compute_network.vpc]
 }
 
 resource "google_compute_firewall" "deny_http_traffic_db" {

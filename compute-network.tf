@@ -1,8 +1,8 @@
 resource "google_compute_network" "vpc" {
   name                            = "vpc-${random_string.resource_name.result}"
-  auto_create_subnetworks         = false
+  auto_create_subnetworks         = var.auto_create_subnetworks
   routing_mode                    = var.routing_mode
-  delete_default_routes_on_create = true
+  delete_default_routes_on_create = var.delete_default_routes_on_create
 }
 
 resource "google_compute_subnetwork" "webapp" {
@@ -23,10 +23,21 @@ resource "google_compute_subnetwork" "db" {
 
 resource "google_compute_route" "webapp_route" {
   name             = "route-${random_string.resource_name.result}"
-  dest_range       = var.egress_cidr_block
+  dest_range       = var.internet_access_route
   network          = google_compute_network.vpc.name
   next_hop_gateway = var.default_internet_gateway
   depends_on       = [google_compute_network.vpc]
+}
+
+resource "google_compute_firewall" "deny_all" {
+  name    = "deny-all-${random_string.resource_name.result}"
+  network = google_compute_network.vpc.name
+  deny {
+    protocol = "all"
+  }
+  source_ranges = var.source_ranges
+  priority      = 1000
+  depends_on    = [google_compute_network.vpc]
 }
 
 resource "google_compute_firewall" "allow_http_traffic_webapp" {
@@ -36,9 +47,10 @@ resource "google_compute_firewall" "allow_http_traffic_webapp" {
     protocol = var.protocol
     ports    = var.http_port
   }
+  priority      = 999
   source_ranges = var.source_ranges
   # Only affect traffic to or from instances that have one or more of the specified tags
-  target_tags = ["webapp"]
+  target_tags = [var.webapp_firewall_http_tag]
   depends_on  = [google_compute_network.vpc]
 }
 
@@ -49,9 +61,10 @@ resource "google_compute_firewall" "allow_https_traffic_webapp" {
     protocol = var.protocol
     ports    = var.https_port
   }
+  priority      = 999
   source_ranges = var.source_ranges
   # Only affect traffic to or from instances that have one or more of the specified tags
-  target_tags = ["webapp"]
+  target_tags = [var.webapp_firewall_https_tag]
   depends_on  = [google_compute_network.vpc]
 }
 
@@ -62,37 +75,38 @@ resource "google_compute_firewall" "allow_app_traffic_webapp" {
     protocol = var.protocol
     ports    = var.app_port
   }
+  priority      = 999
   source_ranges = var.source_ranges
   # Only affect traffic to or from instances that have one or more of the specified tags
-  target_tags = ["webapp"]
+  target_tags = [var.webapp_firewall_app_tag]
   depends_on  = [google_compute_network.vpc]
 }
 
 resource "google_compute_firewall" "deny_http_traffic_db" {
-  name      = "deny-http-traffic-db-${random_string.resource_name.result}"
-  network   = google_compute_network.vpc.name
-  direction = "INGRESS"
+  name    = "deny-http-traffic-db-${random_string.resource_name.result}"
+  network = google_compute_network.vpc.name
   deny {
     protocol = var.protocol
     ports    = var.http_port
   }
+  priority      = 999
   source_ranges = var.source_ranges
   # Only allow traffic from instances that have one or more of the specified tags
-  source_tags = ["db"]
+  source_tags = [var.db_firewall_http_tag]
   depends_on  = [google_compute_network.vpc]
 }
 
 resource "google_compute_firewall" "deny_https_traffic_db" {
-  name      = "deny-https-traffic-db-${random_string.resource_name.result}"
-  network   = google_compute_network.vpc.name
-  direction = "INGRESS"
+  name    = "deny-https-traffic-db-${random_string.resource_name.result}"
+  network = google_compute_network.vpc.name
   deny {
     protocol = var.protocol
     ports    = var.https_port
   }
+  priority      = 999
   source_ranges = var.source_ranges
   # Only allow traffic from instances that have one or more of the specified tags
-  source_tags = ["db"]
+  source_tags = [var.db_firewall_https_tag]
   depends_on  = [google_compute_network.vpc]
 }
 
@@ -119,7 +133,7 @@ resource "google_compute_instance" "webapp_vm" {
     email  = var.sa_email
     scopes = var.sa_scopes
   }
-  tags       = ["webapp"]
+  tags       = [var.webapp_firewall_http_tag, var.webapp_firewall_https_tag, var.webapp_firewall_app_tag]
   depends_on = [google_compute_network.vpc, google_compute_subnetwork.webapp]
 }
 

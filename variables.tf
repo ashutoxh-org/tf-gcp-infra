@@ -81,11 +81,19 @@ variable "custom_image" {
   type = string
 }
 
-variable "disk_size" {
+variable "webapp_disk_size" {
   type = number
 }
 
-variable "disk_type" {
+variable "db_disk_size" {
+  type = number
+}
+
+variable "webapp_disk_type" {
+  type = string
+}
+
+variable "db_disk_type" {
   type = string
 }
 
@@ -106,5 +114,21 @@ variable "db_firewall_http_tag" {
 }
 
 variable "db_firewall_https_tag" {
+  type = string
+}
+
+variable "database_version" {
+  type = string
+}
+
+variable "database_tier" {
+  type = string
+}
+
+variable "availability_type" {
+  type = string
+}
+
+variable "db_user" {
   type = string
 }

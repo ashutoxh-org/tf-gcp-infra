@@ -165,8 +165,8 @@ resource "google_sql_database_instance" "db_instance" {
 }
 
 resource "google_sql_database" "cloud_native_app_db" {
-  name       = "cloud-native-app-db-${random_string.resource_name.result}"
-  instance   = google_sql_database_instance.db_instance.name
+  name     = "cloud-native-app-db-${random_string.resource_name.result}"
+  instance = google_sql_database_instance.db_instance.name
 }
 
 resource "random_password" "db_password" {
@@ -175,9 +175,9 @@ resource "random_password" "db_password" {
 }
 
 resource "google_sql_user" "webapp_user" {
-  name       = var.db_user
-  instance   = google_sql_database_instance.db_instance.name
-  password   = random_password.db_password.result
+  name     = var.db_user
+  instance = google_sql_database_instance.db_instance.name
+  password = random_password.db_password.result
 }
 
 resource "google_compute_instance" "webapp_instance" {

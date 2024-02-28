@@ -286,5 +286,5 @@ output "db_user_metadata" {
 output "db_pass_metadata" {
   description = "Database Password stored in instance metadata"
   value       = google_compute_instance.webapp_instance.metadata["db-pass"]
-  sensitive = true
+  sensitive   = true
 }

@@ -7,3 +7,13 @@ CSYE 6225:  Network Structure & Cloud Computing (Spring 2024) - Prof. Tejas Pari
 |:------|:------------------------|:--------|:--------------|
 | 1.    | Compute Engine API      | Active  | Assignment 3  |
 | 2.    | Service Networking API  | Active  | Assignment 5  |
+
+#### DB conn from webapp instance
+```
+sudo dnf module enable postgresql:16 -y
+sudo dnf install postgresql-server -y
+```
+
+```
+psql -h 10.15.0.2 -U webapp_user-vklj0n
+```

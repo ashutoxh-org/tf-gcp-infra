@@ -32,7 +32,7 @@ resource "google_compute_global_address" "private_services_access" {
 }
 
 resource "google_service_networking_connection" "private_vpc_connection" {
-  provider                = google-beta
+  provider                = google-beta #https://github.com/hashicorp/terraform-provider-google/issues/16275
   network                 = google_compute_network.vpc.id
   service                 = "servicenetworking.googleapis.com"
   reserved_peering_ranges = [google_compute_global_address.private_services_access.name]
@@ -86,20 +86,20 @@ resource "google_compute_firewall" "allow_https_traffic_webapp" {
   depends_on  = [google_compute_network.vpc]
 }
 
-# TODO: DELETE ME
-resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
-  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
-  network = google_compute_network.vpc.name
-  allow {
-    protocol = var.protocol
-    ports    = ["22"]
-  }
-  priority      = 999
-  source_ranges = var.source_ranges
-  # Only affect traffic to or from instances that have one or more of the specified tags
-  target_tags = ["webapp-firewall-ssh"]
-  depends_on  = [google_compute_network.vpc]
-}
+## TODO: COMMENT ME
+#resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
+#  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
+#  network = google_compute_network.vpc.name
+#  allow {
+#    protocol = var.protocol
+#    ports    = ["22"]
+#  }
+#  priority      = 999
+#  source_ranges = var.source_ranges
+#  # Only affect traffic to or from instances that have one or more of the specified tags
+#  target_tags = ["webapp-firewall-ssh"]
+#  depends_on  = [google_compute_network.vpc]
+#}
 
 resource "google_compute_firewall" "allow_app_traffic_webapp" {
   name    = "allow-app-traffic-webapp-${random_string.resource_name.result}"
@@ -165,7 +165,7 @@ resource "google_sql_database_instance" "db_instance" {
 }
 
 resource "google_sql_database" "cloud_native_app_db" {
-  name     = "cloud-native-app-db-${random_string.resource_name.result}"
+  name     = "${var.db_user}-${random_string.resource_name.result}"
   instance = google_sql_database_instance.db_instance.name
 }
 
@@ -175,7 +175,7 @@ resource "random_password" "db_password" {
 }
 
 resource "google_sql_user" "webapp_user" {
-  name     = var.db_user
+  name     = "${var.db_user}-${random_string.resource_name.result}"
   instance = google_sql_database_instance.db_instance.name
   password = random_password.db_password.result
 }
@@ -263,7 +263,28 @@ EOT
   depends_on = [google_compute_subnetwork.webapp_subnet, google_sql_database_instance.db_instance]
 }
 
-output "webapp_instance_ip" {
-  value      = google_compute_instance.webapp_instance.network_interface[0].access_config[0].nat_ip
-  depends_on = [google_compute_instance.webapp_instance]
+output "webapp_ip" {
+  description = "The external IP address of the webapp instance"
+  value       = google_compute_instance.webapp_instance.network_interface[0].access_config[0].nat_ip
+}
+
+output "db_host_metadata" {
+  description = "Database Host stored in instance metadata"
+  value       = google_compute_instance.webapp_instance.metadata["db-host"]
+}
+
+output "db_name_metadata" {
+  description = "Database Name stored in instance metadata"
+  value       = google_compute_instance.webapp_instance.metadata["db-name"]
+}
+
+output "db_user_metadata" {
+  description = "Database User stored in instance metadata"
+  value       = google_compute_instance.webapp_instance.metadata["db-user"]
+}
+
+output "db_pass_metadata" {
+  description = "Database Password stored in instance metadata"
+  value       = google_compute_instance.webapp_instance.metadata["db-pass"]
+  sensitive   = true
 }

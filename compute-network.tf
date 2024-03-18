@@ -87,19 +87,19 @@ resource "google_compute_firewall" "allow_https_traffic_webapp" {
 }
 
 ## TODO: COMMENT ME
-#resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
-#  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
-#  network = google_compute_network.vpc.name
-#  allow {
-#    protocol = var.protocol
-#    ports    = ["22"]
-#  }
-#  priority      = 999
-#  source_ranges = var.source_ranges
-#  # Only affect traffic to or from instances that have one or more of the specified tags
-#  target_tags = ["webapp-firewall-ssh"]
-#  depends_on  = [google_compute_network.vpc]
-#}
+resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
+  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
+  network = google_compute_network.vpc.name
+  allow {
+    protocol = var.protocol
+    ports    = ["22"]
+  }
+  priority      = 999
+  source_ranges = var.source_ranges
+  # Only affect traffic to or from instances that have one or more of the specified tags
+  target_tags = ["webapp-firewall-ssh"]
+  depends_on  = [google_compute_network.vpc]
+}
 
 resource "google_compute_firewall" "allow_app_traffic_webapp" {
   name    = "allow-app-traffic-webapp-${random_string.resource_name.result}"
@@ -175,9 +175,29 @@ resource "random_password" "db_password" {
 }
 
 resource "google_sql_user" "webapp_user" {
-  name     = "${var.db_user}-${random_string.resource_name.result}"
-  instance = google_sql_database_instance.db_instance.name
-  password = random_password.db_password.result
+  name       = "${var.db_user}-${random_string.resource_name.result}"
+  instance   = google_sql_database_instance.db_instance.name
+  password   = random_password.db_password.result
+  depends_on = [google_sql_database_instance.db_instance]
+}
+
+resource "google_service_account" "webapp_service_account" {
+  account_id   = "vm-service-account-${random_string.resource_name.result}"
+  display_name = "VM Service Account"
+}
+
+resource "google_project_iam_binding" "logging_admin" {
+  role       = "roles/logging.admin"
+  members    = ["serviceAccount:${google_service_account.webapp_service_account.email}"]
+  project    = var.project_id
+  depends_on = [google_service_account.webapp_service_account]
+}
+
+resource "google_project_iam_binding" "monitoring_metric_writer" {
+  role       = "roles/monitoring.metricWriter"
+  members    = ["serviceAccount:${google_service_account.webapp_service_account.email}"]
+  project    = var.project_id
+  depends_on = [google_service_account.webapp_service_account]
 }
 
 resource "google_compute_instance" "webapp_instance" {
@@ -200,7 +220,7 @@ resource "google_compute_instance" "webapp_instance" {
     }
   }
   service_account {
-    email  = var.sa_email
+    email  = google_service_account.webapp_service_account.email
     scopes = var.sa_scopes
   }
   metadata = {
@@ -260,7 +280,7 @@ resource "google_compute_instance" "webapp_instance" {
 EOT
 
   tags       = [var.webapp_firewall_http_tag, var.webapp_firewall_https_tag, var.webapp_firewall_app_tag, "webapp-firewall-ssh"]
-  depends_on = [google_compute_subnetwork.webapp_subnet, google_sql_database_instance.db_instance]
+  depends_on = [google_compute_subnetwork.webapp_subnet, google_sql_database_instance.db_instance, google_service_account.webapp_service_account]
 }
 
 output "webapp_ip" {

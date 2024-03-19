@@ -21,3 +21,14 @@ sudo dnf install postgresql-server -y
 ```
 psql -h 10.208.0.2 -U webapp_user-mm6008
 ```
+
+
+### Check app log
+```
+cat /var/log/webapp/webapp.log
+```
+### Check ops agent status
+```
+sudo systemctl status  google-cloud-ops-agent"*"
+```
+

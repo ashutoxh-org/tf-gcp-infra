@@ -248,6 +248,8 @@ resource "google_compute_instance" "webapp_instance" {
     echo "curl does not exist on this system." >> /var/log/startup-script.log
   fi
 
+  echo 'Setting UTC timezone...' && sudo timedatectl set-timezone UTC
+
   # Fetch database connection details from metadata service
   DB_HOST=$(curl http://metadata.google.internal/computeMetadata/v1/instance/attributes/db-host -H "Metadata-Flavor: Google")
   echo "DB_HOST $DB_HOST" >> /var/log/startup-script.log
@@ -281,6 +283,15 @@ EOT
 
   tags       = [var.webapp_firewall_http_tag, var.webapp_firewall_https_tag, var.webapp_firewall_app_tag, "webapp-firewall-ssh"]
   depends_on = [google_compute_subnetwork.webapp_subnet, google_sql_database_instance.db_instance, google_service_account.webapp_service_account]
+}
+
+resource "google_dns_record_set" "webapp_a_record" {
+  name         = "ashutoxh.me."
+  type         = "A"
+  ttl          = 1
+  managed_zone = "ashutoxh-me"
+  rrdatas      = [google_compute_instance.webapp_instance.network_interface.0.access_config.0.nat_ip]
+  depends_on   = [google_compute_instance.webapp_instance]
 }
 
 output "webapp_ip" {

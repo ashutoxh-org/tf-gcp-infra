@@ -38,7 +38,7 @@ db_user = "webapp_user"
 
 #Webapp instance
 machine_type = "e2-small"
-custom_image = "webapp-centos-stream-8-20240319124705"
+custom_image = "webapp-centos-stream-8-20240319092846"
 webapp_disk_size = 20
 webapp_disk_type = "pd-balanced"
 sa_email = "packer@csye-6225-development.iam.gserviceaccount.com"

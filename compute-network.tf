@@ -6,11 +6,12 @@ resource "google_compute_network" "vpc" {
 }
 
 resource "google_compute_subnetwork" "webapp_subnet" {
-  name          = "webapp-${random_string.resource_name.result}"
-  ip_cidr_range = var.webapp_subnet_cidr_range
-  region        = var.deployment_region
-  network       = google_compute_network.vpc.name
-  depends_on    = [google_compute_network.vpc]
+  name                     = "webapp-${random_string.resource_name.result}"
+  ip_cidr_range            = var.webapp_subnet_cidr_range
+  region                   = var.deployment_region
+  network                  = google_compute_network.vpc.name
+  private_ip_google_access = true
+  depends_on               = [google_compute_network.vpc]
 }
 
 resource "google_compute_subnetwork" "db_subnet" {
@@ -87,19 +88,19 @@ resource "google_compute_firewall" "allow_https_traffic_webapp" {
 }
 
 ## TODO: COMMENT ME
-#resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
-#  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
-#  network = google_compute_network.vpc.name
-#  allow {
-#    protocol = var.protocol
-#    ports    = ["22"]
-#  }
-#  priority      = 999
-#  source_ranges = var.source_ranges
-#  # Only affect traffic to or from instances that have one or more of the specified tags
-#  target_tags = ["webapp-firewall-ssh"]
-#  depends_on  = [google_compute_network.vpc]
-#}
+resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
+  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
+  network = google_compute_network.vpc.name
+  allow {
+    protocol = var.protocol
+    ports    = ["22"]
+  }
+  priority      = 999
+  source_ranges = var.source_ranges
+  # Only affect traffic to or from instances that have one or more of the specified tags
+  target_tags = ["webapp-firewall-ssh"]
+  depends_on  = [google_compute_network.vpc]
+}
 
 resource "google_compute_firewall" "allow_app_traffic_webapp" {
   name    = "allow-app-traffic-webapp-${random_string.resource_name.result}"
@@ -181,6 +182,100 @@ resource "google_sql_user" "webapp_user" {
   depends_on = [google_sql_database_instance.db_instance]
 }
 
+
+resource "google_pubsub_topic" "verify_email_topic" {
+  name                       = "verify_email"
+  message_retention_duration = "604800s" # 7 days in seconds
+  message_storage_policy {
+    allowed_persistence_regions = [var.deployment_region]
+  }
+}
+
+resource "google_pubsub_subscription" "verify_email_subscription" {
+  name                 = "verify_email_subscription"
+  topic                = google_pubsub_topic.verify_email_topic.name
+  ack_deadline_seconds = 60
+}
+
+resource "google_service_account" "cloud_function_service_account" {
+  account_id   = "cf-pubsub-invoker"
+  display_name = "Cloud Function Pub/Sub Invoker"
+}
+
+resource "google_project_iam_member" "pubsub_invoker_binding_cf" {
+  project = var.project_id
+  role    = "roles/pubsub.subscriber"
+  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
+}
+
+resource "google_project_iam_member" "cloudsql_client" {
+  project = var.project_id
+  role    = "roles/cloudsql.client"
+  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
+}
+
+resource "google_project_iam_member" "service_account_token_creator" {
+  project = var.project_id
+  role    = "roles/iam.serviceAccountTokenCreator"
+  member  = "serviceAccount:${google_service_account.cloud_function_service_account.email}"
+}
+
+resource "google_storage_bucket" "email_verification_function_bucket" {
+  name                        = "email-verification-function-bucket-${random_string.resource_name.result}"
+  location                    = "US"
+  force_destroy               = true # Allows the bucket to be destroyed even if it contains objects.
+  uniform_bucket_level_access = true
+}
+
+resource "google_storage_bucket_object" "function_source_archive" {
+  name   = "function-source.zip"
+  bucket = google_storage_bucket.email_verification_function_bucket.name
+  source = "/Users/ashutosh/Documents/NEU/SEM2/Cloud/function-source.zip"
+}
+
+resource "google_vpc_access_connector" "function_to_vpc_connector" {
+  name          = "fn-to-vpc-conn-${random_string.resource_name.result}"
+  region        = var.deployment_region
+  network       = google_compute_network.vpc.id
+  ip_cidr_range = var.function_to_vpc_connector_subnet_cidr_range
+}
+
+resource "google_cloudfunctions2_function" "email_verification_function" {
+  name        = "email-verification-function-${random_string.resource_name.result}"
+  description = "Email Verification Cloud Function"
+  location    = var.deployment_region
+  build_config {
+    runtime     = "java21"
+    entry_point = "gcfv2pubsub.PubSubFunction" # Set the entry point
+    source {
+      storage_source {
+        bucket = google_storage_bucket.email_verification_function_bucket.name
+        object = google_storage_bucket_object.function_source_archive.name
+      }
+    }
+  }
+  service_config {
+    max_instance_count    = 1
+    available_memory      = "256Mi"
+    timeout_seconds       = 60
+    vpc_connector         = google_vpc_access_connector.function_to_vpc_connector.id
+    service_account_email = google_service_account.cloud_function_service_account.email
+    environment_variables = {
+      MAILGUN_TOKEN          = var.mailgun_token
+      EXPIRY_TIME_IN_MINUTES = var.expiry_time_in_minutes
+      DB_HOST                = google_sql_database_instance.db_instance.ip_address[0].ip_address
+      DB_NAME                = google_sql_database.cloud_native_app_db.name
+      DB_USER                = google_sql_user.webapp_user.name
+      DB_PASS                = google_sql_user.webapp_user.password
+    }
+  }
+  event_trigger {
+    event_type     = "google.cloud.pubsub.topic.v1.messagePublished"
+    pubsub_topic   = google_pubsub_topic.verify_email_topic.id
+    trigger_region = var.deployment_region
+  }
+}
+
 resource "google_service_account" "webapp_service_account" {
   account_id   = "vm-service-account-${random_string.resource_name.result}"
   display_name = "VM Service Account"
@@ -198,6 +293,12 @@ resource "google_project_iam_binding" "monitoring_metric_writer" {
   members    = ["serviceAccount:${google_service_account.webapp_service_account.email}"]
   project    = var.project_id
   depends_on = [google_service_account.webapp_service_account]
+}
+
+resource "google_project_iam_member" "pubsub_invoker_binding_webapp" {
+  project = var.project_id
+  role    = "roles/pubsub.publisher"
+  member  = "serviceAccount:${google_service_account.webapp_service_account.email}"
 }
 
 resource "google_compute_instance" "webapp_instance" {
@@ -282,7 +383,7 @@ resource "google_compute_instance" "webapp_instance" {
 EOT
 
   tags       = [var.webapp_firewall_http_tag, var.webapp_firewall_https_tag, var.webapp_firewall_app_tag, "webapp-firewall-ssh"]
-  depends_on = [google_compute_subnetwork.webapp_subnet, google_sql_database_instance.db_instance, google_service_account.webapp_service_account]
+  depends_on = [google_compute_subnetwork.webapp_subnet, google_sql_database_instance.db_instance, google_service_account.webapp_service_account, google_pubsub_topic.verify_email_topic, google_pubsub_subscription.verify_email_subscription, google_cloudfunctions2_function.email_verification_function]
 }
 
 resource "google_dns_record_set" "webapp_a_record" {
@@ -294,9 +395,15 @@ resource "google_dns_record_set" "webapp_a_record" {
   depends_on   = [google_compute_instance.webapp_instance]
 }
 
-output "webapp_ip" {
-  description = "The external IP address of the webapp instance"
-  value       = google_compute_instance.webapp_instance.network_interface[0].access_config[0].nat_ip
+resource "google_dns_record_set" "webapp_mx_record" {
+  name         = "ashutoxh.me."
+  type         = "MX"
+  ttl          = 600
+  managed_zone = "ashutoxh-me"
+  rrdatas = [
+    "10 mxa.mailgun.org.",
+    "10 mxb.mailgun.org."
+  ]
 }
 
 output "db_host_metadata" {
@@ -318,4 +425,9 @@ output "db_pass_metadata" {
   description = "Database Password stored in instance metadata"
   value       = google_compute_instance.webapp_instance.metadata["db-pass"]
   sensitive   = true
+}
+
+output "webapp_ip" {
+  description = "The external IP address of the webapp instance"
+  value       = google_compute_instance.webapp_instance.network_interface[0].access_config[0].nat_ip
 }

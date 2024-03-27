@@ -11,6 +11,7 @@ delete_default_routes_on_create = true
 #SUBNET
 webapp_subnet_cidr_range = "10.0.1.0/24"
 db_subnet_cidr_range = "10.0.2.0/24"
+function_to_vpc_connector_subnet_cidr_range = "10.0.3.0/28"
 
 #Route
 internet_access_route = "0.0.0.0/0"
@@ -38,8 +39,11 @@ db_user = "webapp_user"
 
 #Webapp instance
 machine_type = "e2-small"
-custom_image = "webapp-centos-stream-8-20240319092846"
+custom_image = "webapp-centos-stream-8-20240326103954"
 webapp_disk_size = 20
 webapp_disk_type = "pd-balanced"
 sa_email = "packer@csye-6225-development.iam.gserviceaccount.com"
-sa_scopes = ["https://www.googleapis.com/auth/logging.write", "https://www.googleapis.com/auth/monitoring.write"]
+sa_scopes = ["https://www.googleapis.com/auth/cloud-platform", "https://www.googleapis.com/auth/logging.write", "https://www.googleapis.com/auth/monitoring.write", "https://www.googleapis.com/auth/pubsub"]
+
+#CF
+expiry_time_in_minutes = 2

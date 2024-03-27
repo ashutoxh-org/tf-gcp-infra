@@ -28,6 +28,10 @@ variable "db_subnet_cidr_range" {
   type = string
 }
 
+variable "function_to_vpc_connector_subnet_cidr_range" {
+  type = string
+}
+
 variable "deployment_region" {
   type = string
 }
@@ -131,4 +135,12 @@ variable "availability_type" {
 
 variable "db_user" {
   type = string
+}
+
+variable "mailgun_token" {
+  type = string
+}
+
+variable "expiry_time_in_minutes" {
+  type = number
 }

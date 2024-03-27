@@ -3,14 +3,18 @@ CSYE 6225:  Network Structure & Cloud Computing (Spring 2024) - Prof. Tejas Pari
 
 
 ### Active GCP services
-| Sr no | Service                | Status   | When          |
-|:------|:-----------------------|:---------|:--------------|
-| 1.    | Compute Engine API     | Active   | Assignment 3  |
-| 2.    | Service Networking API | Active   | Assignment 5  |
-| 3.    | Cloud DNS API          | Active   | Assignment 6  |
-| 4.    | Cloud Monitoring API   | Active   | Assignment 6  |
-| 5.    | Cloud Logging API      | Active   | Assignment 6  |
-
+| Sr no | Service                | Status                | When                 |
+|:------|:-----------------------|:----------------------|:---------------------|
+| 1.    | Compute Engine API     | Active                | Assignment 3         |
+| 2.    | Service Networking API | Active                | Assignment 5         |
+| 3.    | Cloud DNS API          | Active                | Assignment 6         |
+| 4.    | Cloud Monitoring API   | Active                | Assignment 6         |
+| 5.    | Cloud Logging API      | Active                | Assignment 6         |
+| 6.    | Cloud Build API        | Active                | Assignment 7         |
+| 7.    | Cloud Functions API    | Active                | Assignment 7         |
+| 8.    | Cloud Pub/Sub API      | Active                | Assignment 7         |
+| 9.    | Eventarc API           | Active                | Assignment 7         |
+| 10.   | Cloud Run Admin API    | Active                | Assignment 7         |
 
 #### DB conn from webapp instance
 ```

@@ -87,21 +87,6 @@ resource "google_compute_firewall" "allow_https_traffic_webapp" {
   depends_on  = [google_compute_network.vpc]
 }
 
-## TODO: COMMENT ME
-resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
-  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
-  network = google_compute_network.vpc.name
-  allow {
-    protocol = var.protocol
-    ports    = ["22"]
-  }
-  priority      = 999
-  source_ranges = var.source_ranges
-  # Only affect traffic to or from instances that have one or more of the specified tags
-  target_tags = ["webapp-firewall-ssh"]
-  depends_on  = [google_compute_network.vpc]
-}
-
 resource "google_compute_firewall" "allow_app_traffic_webapp" {
   name    = "allow-app-traffic-webapp-${random_string.resource_name.result}"
   network = google_compute_network.vpc.name
@@ -141,5 +126,20 @@ resource "google_compute_firewall" "deny_https_traffic_db" {
   source_ranges = var.source_ranges
   # Only allow traffic from instances that have one or more of the specified tags
   source_tags = [var.db_firewall_https_tag]
+  depends_on  = [google_compute_network.vpc]
+}
+
+## TODO: COMMENT ME
+resource "google_compute_firewall" "allow_ssh_traffic_webapp" {
+  name    = "allow-ssh-traffic-webapp-${random_string.resource_name.result}"
+  network = google_compute_network.vpc.name
+  allow {
+    protocol = var.protocol
+    ports    = ["22"]
+  }
+  priority      = 999
+  source_ranges = var.source_ranges
+  # Only affect traffic to or from instances that have one or more of the specified tags
+  target_tags = ["webapp-firewall-ssh"]
   depends_on  = [google_compute_network.vpc]
 }

@@ -3,8 +3,8 @@ resource "google_dns_record_set" "webapp_a_record" {
   type         = "A"
   ttl          = 600
   managed_zone = "ashutoxh-me"
-  rrdatas      = [google_compute_instance.webapp_instance.network_interface.0.access_config.0.nat_ip]
-  depends_on   = [google_compute_instance.webapp_instance]
+  rrdatas      = [google_compute_global_forwarding_rule.webapp_forwarding_rule.ip_address]
+  depends_on   = [google_compute_global_forwarding_rule.webapp_forwarding_rule]
 }
 
 resource "google_dns_record_set" "webapp_mx_record" {

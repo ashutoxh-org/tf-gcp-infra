@@ -33,5 +33,4 @@ resource "google_sql_user" "webapp_user" {
   name       = "${var.db_user}-${random_string.resource_name.result}"
   instance   = google_sql_database_instance.db_instance.name
   password   = random_password.db_password.result
-  depends_on = [google_sql_database_instance.db_instance]
 }

@@ -1,6 +1,6 @@
 resource "google_compute_instance_template" "webapp_instance_template" {
-  name_prefix  = "webapp-instance-template-${random_string.resource_name.result}"
-  machine_type = var.machine_type
+  name_prefix    = "webapp-instance-template-${random_string.resource_name.result}"
+  machine_type   = var.machine_type
   can_ip_forward = true
   disk {
     boot         = true

@@ -10,9 +10,6 @@ resource "google_compute_instance_template" "webapp_instance_template" {
   network_interface {
     network    = google_compute_network.vpc.name
     subnetwork = google_compute_subnetwork.webapp_subnet.name
-    access_config {
-      // This block assigns a random external IP
-    }
   }
   service_account {
     email  = google_service_account.webapp_service_account.email

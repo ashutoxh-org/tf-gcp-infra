@@ -3,13 +3,12 @@ resource "google_compute_region_instance_group_manager" "webapp_instance_group_m
   region               = var.deployment_region
   base_instance_name = "webapp-instance"
   target_size        = 1 # Initial size of the instance group
+  lifecycle {
+    ignore_changes = [target_size]
+  }
   version {
     name = "v1"
     instance_template = google_compute_instance_template.webapp_instance_template.self_link
-  }
-  named_port {
-    name = "https"
-    port = 443
   }
   named_port {
     name = "http"

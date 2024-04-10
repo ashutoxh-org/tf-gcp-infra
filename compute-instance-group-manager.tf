@@ -2,7 +2,7 @@ resource "google_compute_region_instance_group_manager" "webapp_instance_group_m
   name               = "webapp-instance-group-manager-${random_string.resource_name.result}"
   region             = var.deployment_region
   base_instance_name = "webapp-instance"
-  target_size        = 1 # Initial size of the instance group
+  target_size        = 4 # Initial size of the instance group
   lifecycle {
     ignore_changes = [target_size]
   }

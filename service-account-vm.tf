@@ -22,3 +22,10 @@ resource "google_project_iam_member" "pubsub_invoker_binding_webapp" {
   role    = "roles/pubsub.publisher"
   member  = "serviceAccount:${google_service_account.webapp_service_account.email}"
 }
+
+resource "google_kms_crypto_key_iam_binding" "vm_kms_enc_dec" {
+  role          = "roles/cloudkms.cryptoKeyEncrypterDecrypter"
+  crypto_key_id = google_kms_crypto_key.vm_key.id
+  members       = ["serviceAccount:service-774789869920@compute-system.iam.gserviceaccount.com",
+                      "serviceAccount:${google_service_account.webapp_service_account.email}"]
+}

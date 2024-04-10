@@ -54,7 +54,7 @@ resource "google_compute_firewall" "deny_all" {
   deny {
     protocol = "all"
   }
-  source_ranges = var.source_ranges
+  source_ranges = ["0.0.0.0/0"]
   priority      = 1000
   depends_on    = [google_compute_network.vpc]
 }
@@ -109,7 +109,7 @@ resource "google_compute_firewall" "deny_http_traffic_db" {
     ports    = var.http_port
   }
   priority      = 999
-  source_ranges = var.source_ranges
+  source_ranges = ["0.0.0.0/0"]
   # Only allow traffic from instances that have one or more of the specified tags
   source_tags = [var.db_firewall_http_tag]
   depends_on  = [google_compute_network.vpc]

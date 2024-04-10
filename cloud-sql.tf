@@ -15,8 +15,9 @@ resource "google_sql_database_instance" "db_instance" {
       enabled = true
     }
   }
+  encryption_key_name = google_kms_crypto_key.sql_key.id
   deletion_protection = false
-  depends_on          = [google_compute_subnetwork.db_subnet, google_service_networking_connection.private_vpc_connection]
+  depends_on          = [google_compute_subnetwork.db_subnet, google_service_networking_connection.private_vpc_connection, google_project_service_identity.gcp_sa_cloud_sql]
 }
 
 resource "google_sql_database" "cloud_native_app_db" {

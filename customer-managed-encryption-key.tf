@@ -5,7 +5,7 @@ resource "google_kms_key_ring" "key_ring" {
 }
 
 resource "google_kms_crypto_key" "vm_key" {
-  provider = google-beta
+  provider        = google-beta
   name            = "vm-key-${random_string.resource_name.result}"
   key_ring        = google_kms_key_ring.key_ring.id
   rotation_period = "2592000s" # 30 days in seconds
@@ -15,7 +15,7 @@ resource "google_kms_crypto_key" "vm_key" {
 }
 
 resource "google_kms_crypto_key" "sql_key" {
-  provider = google-beta
+  provider        = google-beta
   name            = "sql-key-${random_string.resource_name.result}"
   key_ring        = google_kms_key_ring.key_ring.id
   rotation_period = "2592000s" # 30 days in seconds
@@ -25,7 +25,7 @@ resource "google_kms_crypto_key" "sql_key" {
 }
 
 resource "google_kms_crypto_key" "bucket_key" {
-  provider = google-beta
+  provider        = google-beta
   name            = "bucket-key-${random_string.resource_name.result}"
   key_ring        = google_kms_key_ring.key_ring.id
   rotation_period = "2592000s" # 30 days in seconds

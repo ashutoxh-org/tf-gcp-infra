@@ -1,7 +1,7 @@
 resource "google_compute_instance_template" "webapp_instance_template" {
   name_prefix    = "webapp-instance-template-${random_string.resource_name.result}"
   machine_type   = var.machine_type
-  region = var.deployment_region
+  region         = var.deployment_region
   can_ip_forward = true
   disk {
     boot         = true
@@ -11,7 +11,7 @@ resource "google_compute_instance_template" "webapp_instance_template" {
       kms_key_self_link = google_kms_crypto_key.vm_key.id
     }
     disk_size_gb = var.webapp_disk_size
-    disk_type = var.webapp_disk_type
+    disk_type    = var.webapp_disk_type
   }
   network_interface {
     network    = google_compute_network.vpc.name

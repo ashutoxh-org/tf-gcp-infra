@@ -3,10 +3,10 @@ resource "google_storage_bucket" "email_verification_function_bucket" {
   location                    = var.deployment_region
   force_destroy               = true # Allows the bucket to be destroyed even if it contains objects.
   uniform_bucket_level_access = true
-    encryption {
-      default_kms_key_name = google_kms_crypto_key.bucket_key.id
-    }
-    depends_on = [google_kms_crypto_key_iam_binding.gcs_binding]
+  encryption {
+    default_kms_key_name = google_kms_crypto_key.bucket_key.id
+  }
+  depends_on = [google_kms_crypto_key_iam_binding.gcs_binding]
 }
 
 resource "google_storage_bucket_object" "function_source_archive" {
